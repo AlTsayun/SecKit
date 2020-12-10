@@ -9,7 +9,7 @@ set(LIBRARIES)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 find_package(cryptlib REQUIRED)
-add_executable(SecKit #[[mainOld.cpp]] main.cpp)
+add_executable(SecKit #[[main.cpp]] core/Encryption/EncryptorTest.cpp core/Encryption/Encryptor.cpp core/Encryption/Encryptor.h core/Entry/Entry.cpp core/Entry/Entry.h)
 
 
 message("include dirs: ${INCLUDE_DIRS}")
