@@ -3,21 +3,38 @@ project(SecKit)
 
 set(CMAKE_CXX_STANDARD 14)
 
-
 set(INCLUDE_DIRS)
 set(LIBRARIES)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-find_package(cryptlib REQUIRED)
-add_executable(SecKit #[[main.cpp]] core/Encryption/EncryptorTest.cpp core/Encryption/Encryptor.cpp core/Encryption/Encryptor.h core/Entry/Entry.cpp core/Entry/Entry.h)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+find_package(cryptlib REQUIRED)
+find_package(libprotobuf REQUIRED)
+add_executable(SecKit #[[main.cpp]]
+        core/encryption/Encryptor.cpp
+        core/encryption/Encryptor.h
+
+        core/record/PasswordRecord.cpp
+        core/record/PasswordRecord.h
+
+        core/record/Record.cpp
+        core/record/Record.h
+
+        core/serialization/Serializer.cpp
+        core/serialization/Serializer.h
+#        core/serialization/SerializerTest.cpp
+
+        core/serialization/generated/password.pb.cc
+        core/serialization/generated/password.pb.h
+
+        core/mainService/MainService.cpp
+        core/mainService/MainService.h
+
+        core/mainService/MainServiceTest.cpp)
 
 message("include dirs: ${INCLUDE_DIRS}")
 message("libraries: ${LIBRARIES}")
 
 include_directories(${INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
-
-
-#include_directories(${CRYPTLIB_INCLUDE_DIR})
-#target_link_libraries(${PROJECT_NAME} ${CRYPTLIB_LIBRARY})

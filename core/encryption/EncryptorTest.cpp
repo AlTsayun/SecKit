@@ -1,7 +1,7 @@
 #include "Encryptor.h"
+
 int main(int argc, char* argv[])
 {
-
     const std::string infilePath = "test.txt";
     const CryptoPP::byte data[] = // 70 characters
             "Now is the time for all good men to come to the aide of their country.";
