@@ -5,6 +5,7 @@
 #ifndef SECKIT_PASSWORDRECORD_H
 #define SECKIT_PASSWORDRECORD_H
 
+#include <sstream>
 #include "Record.h"
 #include "../serialization/generated/password.pb.h"
 
@@ -12,6 +13,8 @@ class PasswordRecord : public Record {
 private:
     serialization::Password* protoItem;
     static RecordTypeInfo* typeInfo;
+    static const std::string delimiter;
+    bool isPasswordShown = false;
 public:
     RecordTypeInfo * getTypeInfo() override;
 
@@ -24,6 +27,8 @@ public:
     std::string getInfo() override;
 
     ~PasswordRecord() override;
+
+    std::ostringstream *lastOperationInfo= new std::ostringstream();
 };
 
 

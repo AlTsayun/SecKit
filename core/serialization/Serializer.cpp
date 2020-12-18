@@ -40,6 +40,8 @@ std::deque<Record*>* Serializer::deserialize(std::string input) {
 
         bool isSerialized = false;
         std::vector<std::string> keys;
+
+        //todo:replace for-loop with find on map
         for (const auto& pair: *typeIdentifierToRecordConstructor)
             keys.push_back(pair.first);
 

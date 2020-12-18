@@ -9,9 +9,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+
+set(CMAKE_WIN32_EXECUTABLE true)
+
 find_package(cryptlib REQUIRED)
 find_package(libprotobuf REQUIRED)
-add_executable(SecKit #[[main.cpp]]
+add_executable(SecKit
         core/encryption/Encryptor.cpp
         core/encryption/Encryptor.h
 
@@ -30,8 +33,14 @@ add_executable(SecKit #[[main.cpp]]
 
         core/mainService/MainService.cpp
         core/mainService/MainService.h
+#        core/mainService/MainServiceTest.cpp
 
-        core/mainService/MainServiceTest.cpp)
+        winapi/MainWindowController.cpp
+        winapi/MainWindowController.h
+
+        framework.h
+        main.cpp
+        winapi/styles.h)
 
 message("include dirs: ${INCLUDE_DIRS}")
 message("libraries: ${LIBRARIES}")

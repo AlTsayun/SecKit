@@ -19,8 +19,6 @@ private:
     std::multimap<std::string, Record*>* searchMetaToRecord;
     std::multimap<std::string, Record*>* folderToRecord;
 
-
-
     template<typename K, typename V>
     static void removeSinglePairFromMultimap(std::multimap<K,V>* mmap, std::pair<K, V> mapPair);
 
@@ -36,7 +34,26 @@ private:
     template<typename V>
     static std::deque<std::string>* searchKeysInMultiMap(std::multimap<std::string, V> *mmap, std::string searchQuery);
 
+    template<typename K, typename V>
+    static std::deque<K>* getKeysFromMultiMap(std::multimap<K, V> *mmap);
+
+    template<typename K, typename V>
+    static std::deque<V>* getValuesFromMultiMap(std::multimap<K, V> *mmap);
+
+    template<typename K, typename V>
+    static std::deque<K>* getKeysFromMap(std::map<K, V> *map);
+
+    template<typename K, typename V>
+    static std::deque<V>* getValuesFromMap(std::map<K, V> *map);
+
+
     static bool searchSubstring(const std::string & strHaystack, const std::string & strNeedle);
+
+    void addRecord(Record *record);
+    void addTypeInfo(RecordTypeInfo* typeInfo);
+
+    void updateSearchMetaToRecord();
+    void updateFolderToRecord();
 
 
     static MainService *instance;
@@ -47,15 +64,19 @@ public:
     static MainService* getInstance();
 
     Record* getRecordById(std::string id);
-    void removeRecordById(std::string name);
+    std::deque<Record *> * getAllRecords();
+    void removeRecordById(std::string id);
     std::deque<Record*>* findRecordsBySearchQuery(std::string searchQuery);
 
+
+    std::deque<std::string> *getAllFolders();
     std::deque<std::string>* findFoldersBySearchQuery(std::string searchQuery);
     std::deque<Record*>* getRecordsByFolder(std::string folder);
 
+    std::deque<RecordTypeInfo *> *getAllRecordTypeInfos();
     RecordTypeInfo * getTypeInfoById(std::string typeIdentifier);
     std::deque<RecordTypeInfo*>* findTypesBySearchQuery(std::string searchQuery);
-    void save(Record* record);
+    void saveRecord(Record* record);
 
     void loadFile(std::string pathToFile, std::string password);
     void saveFile(std::string pathToFile, std::string password);
