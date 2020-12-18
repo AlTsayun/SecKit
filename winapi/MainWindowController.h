@@ -46,6 +46,7 @@ protected:
 
     HWND list_hwnd;
     #define ID_LIST (101)
+    HMENU hListContextMenu;
 
     HWND listLabel_hwnd;
     #define ID_LIST_LABEL (102)
@@ -67,6 +68,18 @@ protected:
 
     HICON hWindowIcon;
     const LPCWSTR iconPath = L"./resources/";
+
+    HMENU hMenubar;
+    #define IDM_FILE_NEW (107)
+    #define IDM_FILE_OPEN (108)
+    #define IDM_FILE_SAVE (109)
+    #define IDM_RECORD_NEW (110)
+    #define IDM_RECORD_DELETE (111)
+
+    void onContextMenu(WPARAM wParam, LPARAM lParam);
+
+    void onListContextMenu(WPARAM wParam, LPARAM lParam);
+
 };
 
 

@@ -9,6 +9,7 @@
 #define STANDARD_PADDING (3)
 #define window_client_height_offset (39)
 #define window_client_width_offset (16)
+#define menu_client_height (20)
 
 //mainWindow
 #define main_window_styles (0)
@@ -21,7 +22,7 @@
 #define main_window_absolute_x (100)
 #define main_window_absolute_y (100)
 #define main_window_absolute_width (main_window_width + window_client_width_offset)
-#define main_window_absolute_height (main_window_height + window_client_height_offset)
+#define main_window_absolute_height (main_window_height + window_client_height_offset + menu_client_height)
 #define main_window_title (L"SecKit")
 
     //leftPanel
@@ -111,13 +112,13 @@
 
         //outputText
         #define output_text_padding STANDARD_PADDING
-        #define output_text_styles (0)
-        #define output_text_classname L"Static"
+        #define output_text_styles (WS_EX_CLIENTEDGE)
+        #define output_text_classname L"Edit"
         #define output_text_x (right_panel_x + output_text_padding)
         #define output_text_y (right_panel_y + output_text_padding)
         #define output_text_width (right_panel_width - 2*output_text_padding)
         #define output_text_height (right_panel_height - input_panel_height - 2*output_text_padding)
-        #define output_text_title L""
+        #define output_text_title L"Hello"
 
 #define main_window_args                     \
         main_window_styles,                  \
@@ -163,7 +164,7 @@
         list_styles,                \
         list_classname,             \
         list_title,                 \
-        (WS_VSCROLL | WS_VISIBLE | WS_CHILD | ES_AUTOVSCROLL),\
+        (WS_VSCROLL | WS_VISIBLE | WS_CHILD | ES_AUTOVSCROLL | LBS_NOTIFY),\
         list_x,                     \
         list_y,                     \
         list_width,                 \
@@ -173,7 +174,7 @@
         output_text_styles,                \
         output_text_classname,             \
         output_text_title,                 \
-        (WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | ES_LEFT),\
+        (WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | ES_LEFT | ES_READONLY),\
         output_text_x,                     \
         output_text_y,                     \
         output_text_width,                 \

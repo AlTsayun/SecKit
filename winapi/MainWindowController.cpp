@@ -31,10 +31,19 @@ LRESULT CALLBACK MainWindowController::WindowProc(HWND hwnd, UINT uMsg, WPARAM w
         {
             _this->onWindowResized(HIWORD (lParam));
         }
-        else if (uMsg == WM_PAINT)
+//        else if (uMsg == WM_PAINT)
+//        {
+//            _this->onPaint(wParam, lParam);
+// //           _this->onFirstPaint();
+//        }
+        else if (uMsg == WM_CONTEXTMENU)
         {
-            _this->onPaint(wParam, lParam);
-//            _this->onFirstPaint();
+            _this->onContextMenu(wParam, lParam);
+//            HMENU hPopupMenu = CreatePopupMenu();
+//            InsertMenu(hPopupMenu, 0, MF_BYPOSITION | MF_STRING, ID_CLOSE, (LPCWSTR)"Exit");
+//            InsertMenu(hPopupMenu, 0, MF_BYPOSITION | MF_STRING, ID_EXIT, (LPCWSTR)"Play");
+//            SetForegroundWindow(hWnd);
+//            TrackPopupMenu(hPopupMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, 0, 0, 0, hWnd, NULL);
         }
         else if (uMsg == WM_VSCROLL)
         {
@@ -66,12 +75,26 @@ BOOL MainWindowController::init(HINSTANCE hInstance)
 
     RegisterClass(&wc);
 
-    // Create the window.
+    // Create the menu
 
+    hMenubar = CreateMenu();
+
+    HMENU hMenu = CreateMenu();
+    AppendMenu(hMenu, MF_STRING, IDM_FILE_NEW, L"&New");
+    AppendMenu(hMenu, MF_STRING, IDM_FILE_OPEN, L"&Open");
+    AppendMenu(hMenu, MF_STRING, IDM_FILE_SAVE, L"&Save");
+    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenu, L"&File");
+
+    hMenu = CreateMenu();
+    AppendMenu(hMenu, MF_STRING, IDM_RECORD_NEW, L"&New");
+    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenu, L"&Record");
+
+
+    // Create the window
     mainWindow_hwnd = CreateWindowEx(
             main_window_args,
             NULL,
-            NULL,
+            hMenubar,
             hInstance,
             this);
 
@@ -96,6 +119,10 @@ BOOL MainWindowController::init(HINSTANCE hInstance)
             NULL);
 
     SetWindowText(listLabel_hwnd, L"Records");
+
+    hListContextMenu = CreatePopupMenu();
+    AppendMenu(hListContextMenu, MF_BYCOMMAND | MF_STRING | MF_ENABLED, IDM_RECORD_DELETE, L"Delete selected");
+    EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_GRAYED);
     list_hwnd = CreateWindowEx(
             list_args,
             mainWindow_hwnd,
@@ -172,5 +199,31 @@ void MainWindowController::onScrolled(WPARAM wParam, LPARAM lParam)
 }
 
 void MainWindowController::onCommand(WPARAM wParam, LPARAM lParam) {
+    if (LOWORD(wParam) == ID_LIST) {
+        if (HIWORD(wParam) == LBN_SELCHANGE){
+            int selected = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
+            SendMessage(list_hwnd, LB_ADDSTRING, 0, (LPARAM) L"added");
+            if (selected > -1){
+                EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_ENABLED);
+            } else {
+                EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_GRAYED);
+            }
+        }
+    }
+    if (LOWORD(wParam) == IDM_RECORD_DELETE) {
+        int selected = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
+        selected +=0;
 
+    }
+
+}
+
+void MainWindowController::onContextMenu(WPARAM wParam, LPARAM lParam) {
+    if ((HWND)wParam == list_hwnd){
+        onListContextMenu(wParam, lParam);
+    }
+}
+
+void MainWindowController::onListContextMenu(WPARAM wParam, LPARAM lParam) {
+    TrackPopupMenu(hListContextMenu, TPM_TOPALIGN | TPM_LEFTALIGN, LOWORD(lParam), HIWORD(lParam), 0, mainWindow_hwnd, NULL);
 }
