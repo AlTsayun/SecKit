@@ -37,7 +37,7 @@ void PasswordRecord::manipulate(std::string input) {
         }else if(token == "password"){
             protoItem->set_password(input);
         } else{
-            *lastOperationInfo << "Unknown command: \"" << input << "\"" << std::endl;
+            *lastOperationInfo << "Unknown token: \"" << token << "\"" << std::endl;
         }
 
     } else {
@@ -63,6 +63,7 @@ std::string PasswordRecord::getSerializationData() {
 
 PasswordRecord::PasswordRecord() {
     protoItem = new serialization::Password();
+    protoItem->set_name("<new password>");
 }
 
 std::string PasswordRecord::getFolder() {
@@ -73,15 +74,16 @@ std::string PasswordRecord::getInfo() {
     std::ostringstream oss;
 
     oss << lastOperationInfo->str() << std::endl
-    <<std::setw(15) << std::right << "name: " << protoItem->name() << std::endl
-    <<std::setw(15) << std::right << "url: " << protoItem->url() << std::endl
-    <<std::setw(15) << std::right << "application: " << protoItem->application() << std::endl
-    <<std::setw(15) << std::right << "folder: " << protoItem->folder() << std::endl
-    <<std::setw(15) << std::right << "login: " << protoItem->login() << std::endl
-    <<std::setw(15) << std::right << "password: " << (isPasswordShown ? protoItem->password() : std::string(protoItem->password().length(), '*')) << std::endl
-    <<std::setw(15) << std::right << "note: " << std::endl << protoItem->note() << std::endl
-    ;
+        <<std::setw(15) << std::right << "name: " << protoItem->name() << std::endl
+        <<std::setw(15) << std::right << "url: " << protoItem->url() << std::endl
+        <<std::setw(15) << std::right << "application: " << protoItem->application() << std::endl
+        <<std::setw(15) << std::right << "login: " << protoItem->login() << std::endl
+        <<std::setw(15) << std::right << "password: " << (isPasswordShown ? protoItem->password() : std::string(protoItem->password().length(), '*')) << std::endl
+        <<std::setw(15) << std::right << "note: " << std::endl << protoItem->note() << std::endl
+        <<std::setw(15) << std::right << "folder: " << protoItem->folder() << std::endl
+        ;
 
+    lastOperationInfo->str("");
     lastOperationInfo->clear();
 
     return oss.str();

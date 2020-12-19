@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+package serialization;
+
+message Address {
+  optional int32 id = 1;
+  optional string name = 2;
+  optional string country = 3;
+  optional string region = 4;
+  optional string locality = 5;
+  optional string building = 6;
+  optional string apartment = 7;
+  optional string postIndex = 8;
+  optional string note = 9;
+  optional string folder = 10 [default = ""];
+}

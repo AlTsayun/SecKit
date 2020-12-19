@@ -11,7 +11,8 @@ const std::string Serializer::delimiter = ";";
 std::string Serializer::serialize(std::deque<Record*>* records){
     std::ostringstream oss;
     for(Record* record : *records){
-        auto typeIdentifier =  record->getTypeInfo()->getIdentifier();
+        auto *typeInfo = record->getTypeInfo();
+        auto typeIdentifier =  typeInfo->getIdentifier();
         auto serializationData = record->getSerializationData();
         oss << typeIdentifier
             << delimiter

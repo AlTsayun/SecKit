@@ -54,7 +54,6 @@ private:
 
     static bool searchSubstring(const std::string & strHaystack, const std::string & strNeedle);
 
-    void addRecord(Record *record);
     void addTypeInfo(RecordTypeInfo* typeInfo);
 
     void updateSearchMetaToRecord();
@@ -67,6 +66,7 @@ public:
     void operator=(const RecordSupplier &) = delete;
     static RecordSupplier* getInstance();
 
+    void addRecord(Record *record);
     Record* getRecordById(std::string id);
     std::deque<Record *> * getAllRecords();
     void removeRecordById(std::string id);

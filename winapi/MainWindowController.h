@@ -97,8 +97,13 @@ protected:
     #define EDIT_BUFFER_SIZE 1024
     TCHAR editBuffer[EDIT_BUFFER_SIZE];
 
-    bool isRecords;
-    bool isRecordTypes;
+    BOOL isRecords = 0;
+    BOOL isRecordTypes = 0;
+    BOOL isPassword = 0;
+
+    typedef void (*PasswordOperation) (MainWindowController*, std::string);
+//    std::function<void (MainWindowController*, std::string)> passwordOperation;
+    PasswordOperation passwordOperation;
 
     void onRecordsShow(WPARAM wParam, LPARAM lParam);
 
@@ -110,14 +115,21 @@ protected:
 
     #define CREATE_RECORD_TEXT ("To create a record enter any input")
     #define ABOUT_TEXT ("Hello\nThis is an app to store your passwords and other important information.")
+    #define ENTER_PASSWORD_TEXT (L"Please enter password:")
+    #define WRONG_PASSWORD_TEXT (L"Error! Incorrect password entered!")
     HFONT hMonospacedFont;
 
     void onDestroy(WPARAM wParam, LPARAM lParam);
 
     void onAbout(WPARAM wParam, LPARAM lParam);
     void clearOutput();
+    void clearInput();
 
-    std::string enterPassword();
+    void enterPassword(PasswordOperation passwordOperation);
+
+    void createNewRecord(RecordTypeInfo *typeInfo);
+
+    void showWrongPassword(std::string password);
 };
 
 

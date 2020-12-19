@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include "RecordSupplier.h"
+#include "../record/AddressRecord.h"
 //#include "../record/PasswordRecord.h"
 //#include "../encryption/Encryptor.h"
 
@@ -54,13 +55,13 @@ std::deque<RecordTypeInfo *> * RecordSupplier::getAllRecordTypeInfos() {
 }
 
 void RecordSupplier::saveRecord(Record *record) {
-    std::map<std::string, Record*>::iterator nameToRecordIterator;
+    std::map<std::string, Record*>::iterator idToRecordIterator;
 
-    nameToRecordIterator = idToRecord->find(record->getSearchMeta());
+    idToRecordIterator = idToRecord->find(record->getId());
 
-    if(nameToRecordIterator != idToRecord->end()){
+    if(idToRecordIterator != idToRecord->end()){
         //if exists
-        auto tmp = nameToRecordIterator->second;
+        auto tmp = idToRecordIterator->second;
         if(tmp != record){
             //new item with existing id is being saved
             removeRecordById(tmp->getId());
@@ -71,7 +72,6 @@ void RecordSupplier::saveRecord(Record *record) {
             updateSearchMetaToRecord();
         }
 
-        delete(tmp);
     } else {
         addRecord(record);
     };
@@ -157,7 +157,9 @@ void RecordSupplier::removeRecordById(std::string id) {
 }
 
 void RecordSupplier::saveFile(std::string pathToFile, std::string password) {
-    std::string serialized = serializer->serialize(getAllRecords());
+    auto* records = getAllRecords();
+    int size = records->size();
+    std::string serialized = serializer->serialize(records);
     CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption encryption;
 
     Encryptor::encryptFile<CryptoPP::AES>(
@@ -216,8 +218,11 @@ RecordSupplier::RecordSupplier() {
     //todo: insert loading records from backup file
     for (auto * record : *records){
         addRecord(record);
-        addTypeInfo(record->getTypeInfo());
     }
+
+
+    addTypeInfo(PasswordRecord::typeInfo);
+    addTypeInfo(AddressRecord::typeInfo);
 
     auto* typeIdentifierToRecordConstructor = new std::unordered_map<std::string, Record::RecordConstructor>();
     for (auto pair: *idToRecordTypeInfo){

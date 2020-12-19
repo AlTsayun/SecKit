@@ -12,6 +12,7 @@
 
 MainWindowController::MainWindowController(RecordSupplier* mainService)
 {
+    isPassword = FALSE;
     this->recordSupplier = mainService;
 }
 LRESULT CALLBACK MainWindowController::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -154,6 +155,7 @@ BOOL MainWindowController::init(HINSTANCE hInstance)
     loadRecords(records);
     delete(records);
 
+    isPassword = false;
     onAbout(0,0);
 
     return TRUE;
@@ -226,6 +228,7 @@ void MainWindowController::onListContextMenu(WPARAM wParam, LPARAM lParam) {
 }
 
 void MainWindowController::loadRecords(std::deque<Record *> *records) {
+    clearOutput();
     isRecords = true;
     isRecordTypes = false;
     SendMessage(list_hwnd, LB_RESETCONTENT, 0, 0);
@@ -251,6 +254,7 @@ std::wstring MainWindowController::stringToWString(const std::string& str) {
 }
 
 void MainWindowController::loadRecordTypes(std::deque<RecordTypeInfo *> *typeInfos) {
+    clearOutput();
     isRecordTypes = true;
     isRecords = false;
     SendMessage(list_hwnd, LB_RESETCONTENT, 0, 0);
@@ -266,6 +270,7 @@ void MainWindowController::loadRecordTypes(std::deque<RecordTypeInfo *> *typeInf
 
 void MainWindowController::onListItemSelected(WPARAM wParam, LPARAM lParam) {
     int position = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
+    isPassword= false;
     if (isRecords){
         if (position > -1){
             EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_ENABLED);
@@ -277,7 +282,7 @@ void MainWindowController::onListItemSelected(WPARAM wParam, LPARAM lParam) {
     if (isRecordTypes){
         if (position > -1) {
             EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_DISABLED);
-            onRecordTypeSelected(wParam, lParam, 0);
+            onRecordTypeSelected(wParam, lParam, position);
         }
     }
 }
@@ -295,57 +300,101 @@ void MainWindowController::onRecordDelete(WPARAM wParam, LPARAM lParam) {
 }
 
 void MainWindowController::onOpenFile(WPARAM wParam, LPARAM lParam) {
-    std::string password = enterPassword();
+    enterPassword([](MainWindowController *_this,std::string password){
+        try{
+            OPENFILENAME ofn;
+            TCHAR szFileName[MAX_PATH] = L"";
 
-    OPENFILENAME ofn;
-    TCHAR szFileName[MAX_PATH] = L"";
+            ZeroMemory(&ofn, sizeof(ofn));
 
-    ZeroMemory(&ofn, sizeof(ofn));
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = _this->mainWindow_hwnd;
+            ofn.lpstrFilter = L"Encrypted Files (*.enc)\0*.enc\0All Files (*.*)\0*.*\0";
+            ofn.lpstrFile = szFileName;
+            ofn.nMaxFile = MAX_PATH;
+            ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+            ofn.lpstrDefExt = L"enc";
 
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = mainWindow_hwnd;
-    ofn.lpstrFilter = L"Encrypted Files (*.enc)\0*.enc\0All Files (*.*)\0*.*\0";
-    ofn.lpstrFile = szFileName;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = L"enc";
-
-    if(GetOpenFileName(&ofn))
-    {
-        std::wstring tmp(&szFileName[0]);
-        std::string pathToFile(tmp.begin(), tmp.end());
-        recordSupplier->loadFile(pathToFile, password);
-    }
-    onRecordsShow(wParam, lParam);
+            if (GetOpenFileName(&ofn)) {
+                std::wstring tmp(&szFileName[0]);
+                std::string pathToFile(tmp.begin(), tmp.end());
+                _this->recordSupplier->loadFile(pathToFile, password);
+            }
+            _this->onRecordsShow(0, 0);
+        }catch(...){
+            _this->showWrongPassword(password);
+        }
+    });
+//    OPENFILENAME ofn;
+//    TCHAR szFileName[MAX_PATH] = L"";
+//
+//    ZeroMemory(&ofn, sizeof(ofn));
+//
+//    ofn.lStructSize = sizeof(ofn);
+//    ofn.hwndOwner = mainWindow_hwnd;
+//    ofn.lpstrFilter = L"Encrypted Files (*.enc)\0*.enc\0All Files (*.*)\0*.*\0";
+//    ofn.lpstrFile = szFileName;
+//    ofn.nMaxFile = MAX_PATH;
+//    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+//    ofn.lpstrDefExt = L"enc";
+//
+//    if (GetOpenFileName(&ofn)) {
+//        std::wstring tmp(&szFileName[0]);
+//        std::string pathToFile(tmp.begin(), tmp.end());
+//        recordSupplier->loadFile(pathToFile, "Hello");
+//    }
+//    onRecordsShow(0,0);
 }
 
 void MainWindowController::onSaveFile(WPARAM wParam, LPARAM lParam) {
 
-    std::string password = enterPassword();
+    enterPassword([](MainWindowController *_this,std::string password){
+        OPENFILENAME ofn;
+        TCHAR szFileName[MAX_PATH] = L"";
 
-    OPENFILENAME ofn;
-    TCHAR szFileName[MAX_PATH] = L"";
+        ZeroMemory(&ofn, sizeof(ofn));
 
-    ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = _this->mainWindow_hwnd;
+        ofn.lpstrFilter = L"Encrypted Files (*.enc)\0*.enc\0All Files (*.*)\0*.*\0";
+        ofn.lpstrFile = szFileName;
+        ofn.nMaxFile = MAX_PATH;
+        ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+        ofn.lpstrDefExt = L"enc";
 
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = mainWindow_hwnd;
-    ofn.lpstrFilter = L"Encrypted Files (*.enc)\0*.enc\0All Files (*.*)\0*.*\0";
-    ofn.lpstrFile = szFileName;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-    ofn.lpstrDefExt = L"enc";
-
-    if(GetSaveFileName(&ofn))
-    {
-        std::wstring tmp(&szFileName[0]);
-        std::string pathToFile(tmp.begin(), tmp.end());
-        recordSupplier->saveFile(pathToFile, password);
-    }
+        if(GetSaveFileName(&ofn))
+        {
+            std::wstring tmp(&szFileName[0]);
+            std::string pathToFile(tmp.begin(), tmp.end());
+            _this->recordSupplier->saveFile(pathToFile, password);
+        }
+        _this->clearOutput();
+    });
+//    OPENFILENAME ofn;
+//    TCHAR szFileName[MAX_PATH] = L"";
+//
+//    ZeroMemory(&ofn, sizeof(ofn));
+//
+//    ofn.lStructSize = sizeof(ofn);
+//    ofn.hwndOwner = mainWindow_hwnd;
+//    ofn.lpstrFilter = L"Encrypted Files (*.enc)\0*.enc\0All Files (*.*)\0*.*\0";
+//    ofn.lpstrFile = szFileName;
+//    ofn.nMaxFile = MAX_PATH;
+//    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+//    ofn.lpstrDefExt = L"enc";
+//
+//    if(GetSaveFileName(&ofn))
+//    {
+//        std::wstring tmp(&szFileName[0]);
+//        std::string pathToFile(tmp.begin(), tmp.end());
+//        recordSupplier->saveFile(pathToFile, "Hello");
+//    }
+//    clearOutput();
 }
 
 void MainWindowController::onNewFile(WPARAM wParam, LPARAM lParam) {
-
+    recordSupplier->removeAllRecords();
+    loadRecords(recordSupplier->getAllRecords());
 }
 
 void MainWindowController::onSearchButtonClick(WPARAM wParam, LPARAM lParam) {
@@ -369,54 +418,64 @@ void MainWindowController::onSearchButtonClick(WPARAM wParam, LPARAM lParam) {
 }
 
 void MainWindowController::onInputButtonClick(WPARAM wParam, LPARAM lParam) {
-    if (isRecords){
+    GetWindowText(inputEdit_hwnd, editBuffer, sizeof(editBuffer));
+    std::wstring tmp(&editBuffer[0]);
+    std::string inputQuery(tmp.begin(), tmp.end());
+    if (isPassword) {
+        passwordOperation(this, inputQuery);
+        isPassword = false;
+    } else if (isRecords) {
         int position = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
-        if (listPositionToItemId->find(position) != listPositionToItemId->end()){
-            auto* record = recordSupplier->getRecordById(listPositionToItemId->at(position));
-            GetWindowText(inputEdit_hwnd, editBuffer, sizeof(editBuffer));
-            std::wstring tmp(&editBuffer[0]);
-            std::string manipulateQuery(tmp.begin(), tmp.end());
-            record->manipulate(manipulateQuery);
+        if (listPositionToItemId->find(position) != listPositionToItemId->end()) {
+            auto *record = recordSupplier->getRecordById(listPositionToItemId->at(position));
+
+            record->manipulate(inputQuery);
+            recordSupplier->saveRecord(record);
             onRecordSelected(wParam, lParam, position);
         }
+    } else if (isRecordTypes) {
+        int position = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
+        if (listPositionToItemId->find(position) != listPositionToItemId->end()) {
+            auto *typeInfo = recordSupplier->getTypeInfoById(listPositionToItemId->at(position));
+            createNewRecord(typeInfo);
+        }
     }
+    clearInput();
 }
 
 void MainWindowController::onRecordsShow(WPARAM wParam, LPARAM lParam) {
-    auto* records = recordSupplier->getAllRecords();
+    auto *records = recordSupplier->getAllRecords();
     loadRecords(records);
-    delete(records);
+    delete (records);
 }
 
 void MainWindowController::onNewRecord(WPARAM wParam, LPARAM lParam) {
-    auto* typeInfos = recordSupplier->getAllRecordTypeInfos();
+    auto *typeInfos = recordSupplier->getAllRecordTypeInfos();
     loadRecordTypes(typeInfos);
-    delete(typeInfos);
+    delete (typeInfos);
 }
 
 void MainWindowController::onRecordSelected(WPARAM wParam, LPARAM lParam, int listPosition) {
-    auto* record = recordSupplier->getRecordById(listPositionToItemId->at(listPosition));
+    auto *record = recordSupplier->getRecordById(listPositionToItemId->at(listPosition));
     auto info = record->getInfo();
     std::string::size_type pos = 0;
-    while ((pos = info.find('\n', pos)) != std::string::npos)
-    {
+    while ((pos = info.find('\n', pos)) != std::string::npos) {
         info.insert(pos, 1, '\r');
-        pos+=2;
+        pos += 2;
     }
     SetWindowText(outputText_hwnd, stringToWString(info).c_str());
 }
 
 void MainWindowController::onRecordTypeSelected(WPARAM wParam, LPARAM lParam, int listPosition) {
-    auto* typeInfo = recordSupplier->getTypeInfoById(listPositionToItemId->at(listPosition));
+    auto *typeInfo = recordSupplier->getTypeInfoById(listPositionToItemId->at(listPosition));
     auto info = typeInfo->getDescription();
     info.append("\n");
     info.append("\n");
     info.append(CREATE_RECORD_TEXT);
     std::string::size_type pos = 0;
-    while ((pos = info.find('\n', pos)) != std::string::npos)
-    {
+    while ((pos = info.find('\n', pos)) != std::string::npos) {
         info.insert(pos, 1, '\r');
-        pos+=2;
+        pos += 2;
     }
     SetWindowText(outputText_hwnd, stringToWString(info).c_str());
 }
@@ -428,12 +487,11 @@ void MainWindowController::onDestroy(WPARAM wParam, LPARAM lParam) {
 }
 
 void MainWindowController::onAbout(WPARAM wParam, LPARAM lParam) {
-    std::string info(ABOUT_TEXT) ;
+    std::string info(ABOUT_TEXT);
     std::string::size_type pos = 0;
-    while ((pos = info.find('\n', pos)) != std::string::npos)
-    {
+    while ((pos = info.find('\n', pos)) != std::string::npos) {
         info.insert(pos, 1, '\r');
-        pos+=2;
+        pos += 2;
     }
     SetWindowText(outputText_hwnd, stringToWString(info).c_str());
     SendMessage(list_hwnd, LB_SETCURSEL, -1, 0);
@@ -444,7 +502,33 @@ void MainWindowController::clearOutput() {
     SetWindowText(outputText_hwnd, L"");
 }
 
-std::string MainWindowController::enterPassword() {
-    return "hello";
+void MainWindowController::enterPassword(PasswordOperation passwordOperation) {
+
+    this->passwordOperation = passwordOperation;
+    SetWindowText(outputText_hwnd, ENTER_PASSWORD_TEXT);
+    isPassword = true;
 }
 
+void MainWindowController::clearInput() {
+    SetWindowText(inputEdit_hwnd, L"");
+}
+
+void MainWindowController::createNewRecord(RecordTypeInfo *typeInfo) {
+    auto *record = (typeInfo->getConstructor())();
+    recordSupplier->addRecord(record);
+    auto* records = recordSupplier->getAllRecords();
+    loadRecords(records);
+    delete(records);
+}
+
+void MainWindowController::showWrongPassword(std::string password) {
+//    SetWindowText(outputText_hwnd, WRONG_PASSWORD_TEXT);
+    MessageBox(
+            NULL,
+            (LPCWSTR)WRONG_PASSWORD_TEXT,
+            (LPCWSTR)L"Error occurred",
+            MB_ICONERROR | MB_OK
+    );
+
+    clearOutput();
+}

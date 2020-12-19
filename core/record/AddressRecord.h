@@ -1,25 +1,24 @@
 //
-// Created by RedmiBook on 11.12.2020.
+// Created by RedmiBook on 19.12.2020.
 //
 
-#ifndef SECKIT_PASSWORDRECORD_H
-#define SECKIT_PASSWORDRECORD_H
+#ifndef SECKIT_ADDRESSRECORD_H
+#define SECKIT_ADDRESSRECORD_H
 
 #include <sstream>
 #include "Record.h"
-#include "../serialization/generated/password.pb.h"
+#include "../serialization/generated/address.pb.h"
 
-class PasswordRecord : public Record {
+class AddressRecord  : public Record {
 private:
-    serialization::Password* protoItem;
+    serialization::Address* protoItem;
     static const std::string delimiter;
-    bool isPasswordShown = false;
 public:
     static RecordTypeInfo* typeInfo;
 
     RecordTypeInfo * getTypeInfo() override;
 
-    PasswordRecord();
+    AddressRecord();
     std::string getSearchMeta() override;
     void manipulate(std::string input) override;
     void initialize(std::string data) override;
@@ -29,10 +28,10 @@ public:
 
     std::string getName() override;
 
-    ~PasswordRecord() override;
+    ~AddressRecord() override;
 
     std::ostringstream *lastOperationInfo= new std::ostringstream();
 };
 
 
-#endif //SECKIT_PASSWORDRECORD_H
+#endif //SECKIT_ADDRESSRECORD_H

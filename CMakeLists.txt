@@ -32,6 +32,9 @@ add_executable(SecKit
         core/serialization/generated/password.pb.cc
         core/serialization/generated/password.pb.h
 
+        core/serialization/generated/address.pb.cc
+        core/serialization/generated/address.pb.h
+
         core/mainService/RecordSupplier.cpp
         core/mainService/RecordSupplier.h
 #        core/recordSupplier/MainServiceTest.cpp
@@ -41,7 +44,7 @@ add_executable(SecKit
 
         framework.h
         main.cpp
-        winapi/styles.h)
+        winapi/styles.h core/record/AddressRecord.cpp core/record/AddressRecord.h)
 
 message("include dirs: ${INCLUDE_DIRS}")
 message("libraries: ${LIBRARIES}")
