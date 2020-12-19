@@ -43,6 +43,8 @@ void PasswordRecord::manipulate(std::string input) {
     } else {
         if (input == "show"){
             isPasswordShown = true;
+        } else if (input == "hide"){
+            isPasswordShown = false;
         } else {
             *lastOperationInfo << "Unknown command: \"" << input << "\"" << std::endl;
         }
@@ -98,4 +100,8 @@ PasswordRecord::~PasswordRecord() {
 
 RecordTypeInfo * PasswordRecord::getTypeInfo() {
     return typeInfo;
+}
+
+std::string PasswordRecord::getName() {
+    return protoItem->name();
 }

@@ -3,56 +3,57 @@
 //
 
 #include <algorithm>
-#include "MainService.h"
-#include "../record/PasswordRecord.h"
+#include "RecordSupplier.h"
+//#include "../record/PasswordRecord.h"
+//#include "../encryption/Encryptor.h"
 
-MainService* MainService::getInstance() {
+RecordSupplier* RecordSupplier::getInstance() {
     if(instance== nullptr){
-        instance = new MainService();
+        instance = new RecordSupplier();
     }
     return instance;
 }
-MainService* MainService::instance= nullptr;
+RecordSupplier* RecordSupplier::instance= nullptr;
 
-Record *MainService::getRecordById(std::string id) {
+Record *RecordSupplier::getRecordById(std::string id) {
     return idToRecord->at(id);
 }
 
-std::deque<Record *> *MainService::findRecordsBySearchQuery(std::string searchQuery) {
+std::deque<Record *> *RecordSupplier::findRecordsBySearchQuery(std::string searchQuery) {
     return searchInMultimap(searchMetaToRecord,searchQuery);
 }
 
-std::deque<std::string> *MainService::findFoldersBySearchQuery(std::string searchQuery) {
+std::deque<std::string> *RecordSupplier::findFoldersBySearchQuery(std::string searchQuery) {
     return searchKeysInMultiMap(folderToRecord, searchQuery);
 }
 
-std::deque<Record *> *MainService::getRecordsByFolder(std::string folder) {
+std::deque<Record *> *RecordSupplier::getRecordsByFolder(std::string folder) {
     return getFromMultimap(folderToRecord, folder);
 }
 
 
-std::deque<RecordTypeInfo *> *MainService::findTypesBySearchQuery(std::string searchQuery) {
+std::deque<RecordTypeInfo *> *RecordSupplier::findTypesBySearchQuery(std::string searchQuery) {
     return searchInMultimap(searchMetaToRecordTypeInfo, searchQuery);
 }
 
-RecordTypeInfo * MainService::getTypeInfoById(std::string typeIdentifier) {
+RecordTypeInfo * RecordSupplier::getTypeInfoById(std::string typeIdentifier) {
     return idToRecordTypeInfo->at(typeIdentifier);
 }
 
 
-std::deque<Record *> * MainService::getAllRecords() {
+std::deque<Record *> * RecordSupplier::getAllRecords() {
     return getValuesFromMap(idToRecord);
 }
 
-std::deque<std::string> * MainService::getAllFolders() {
+std::deque<std::string> * RecordSupplier::getAllFolders() {
     return getKeysFromMultiMap(folderToRecord);
 }
 
-std::deque<RecordTypeInfo *> * MainService::getAllRecordTypeInfos() {
+std::deque<RecordTypeInfo *> * RecordSupplier::getAllRecordTypeInfos() {
     return getValuesFromMap(idToRecordTypeInfo);
 }
 
-void MainService::saveRecord(Record *record) {
+void RecordSupplier::saveRecord(Record *record) {
     std::map<std::string, Record*>::iterator nameToRecordIterator;
 
     nameToRecordIterator = idToRecord->find(record->getSearchMeta());
@@ -79,7 +80,7 @@ void MainService::saveRecord(Record *record) {
 }
 
 template<typename K, typename V>
-void MainService::removeSinglePairFromMultimap(std::multimap<K, V>* mmap, const std::pair<K, V> mapPair) {
+void RecordSupplier::removeSinglePairFromMultimap(std::multimap<K, V>* mmap, const std::pair<K, V> mapPair) {
     std::pair<typename std::multimap<K, V>::iterator, typename std::multimap<K, V>::iterator> iteratorBounds = mmap->equal_range(mapPair.first);
 
     typename std::multimap<K, V>::iterator it = iteratorBounds.first;
@@ -92,7 +93,7 @@ void MainService::removeSinglePairFromMultimap(std::multimap<K, V>* mmap, const 
 }
 
 template<typename K, typename V>
-std::deque<V>* MainService::getFromMultimap(std::multimap<K, V> *mmap, K key) {
+std::deque<V>* RecordSupplier::getFromMultimap(std::multimap<K, V> *mmap, K key) {
     auto* values = new std::deque<V>();
     auto iteratorBounds = mmap->equal_range(key);
     for (auto it = iteratorBounds.first; it != iteratorBounds.second; ++it){
@@ -102,7 +103,7 @@ std::deque<V>* MainService::getFromMultimap(std::multimap<K, V> *mmap, K key) {
 }
 
 template<typename V>
-std::deque<V> *MainService::searchInMultimap(std::multimap<std::string, V> *mmap, std::string searchQuery) {
+std::deque<V> *RecordSupplier::searchInMultimap(std::multimap<std::string, V> *mmap, std::string searchQuery) {
     auto* values = new std::deque<V>();
     for (auto pair: *mmap){
         if(searchSubstring(pair.first, searchQuery)){
@@ -113,7 +114,7 @@ std::deque<V> *MainService::searchInMultimap(std::multimap<std::string, V> *mmap
 }
 
 template<typename V>
-std::deque<V> *MainService::searchValuesInMap(std::map<std::string, V> *map, std::string searchQuery) {
+std::deque<V> *RecordSupplier::searchValuesInMap(std::map<std::string, V> *map, std::string searchQuery) {
     auto* values = new std::deque<V>();
     for (auto pair: *mmap){
         if(searchSubstring(pair.first, searchQuery)){
@@ -124,7 +125,7 @@ std::deque<V> *MainService::searchValuesInMap(std::map<std::string, V> *map, std
 }
 
 template<typename V>
-std::deque<std::string> *MainService::searchKeysInMultiMap(std::multimap<std::string, V> *mmap, std::string searchQuery) {
+std::deque<std::string> *RecordSupplier::searchKeysInMultiMap(std::multimap<std::string, V> *mmap, std::string searchQuery) {
     auto* keys = new std::deque<std::string>();
 
     for(auto it = mmap->begin(), end = mmap->end();
@@ -137,7 +138,7 @@ std::deque<std::string> *MainService::searchKeysInMultiMap(std::multimap<std::st
     return keys;
 }
 
-bool MainService::searchSubstring(const std::string & strHaystack, const std::string & strNeedle)
+bool RecordSupplier::searchSubstring(const std::string & strHaystack, const std::string & strNeedle)
 {
     auto it = std::search(
             strHaystack.begin(), strHaystack.end(),
@@ -147,7 +148,7 @@ bool MainService::searchSubstring(const std::string & strHaystack, const std::st
     return (it != strHaystack.end() );
 }
 
-void MainService::removeRecordById(std::string id) {
+void RecordSupplier::removeRecordById(std::string id) {
     auto* record = idToRecord->at(id);
     removeSinglePairFromMultimap(searchMetaToRecord, std::make_pair(record->getSearchMeta(), record));
     removeSinglePairFromMultimap(folderToRecord, std::make_pair(record->getFolder(), record));
@@ -155,14 +156,31 @@ void MainService::removeRecordById(std::string id) {
     delete(record);
 }
 
-void MainService::saveFile(std::string pathToFile, std::string password) {
+void RecordSupplier::saveFile(std::string pathToFile, std::string password) {
+    std::string serialized = serializer->serialize(getAllRecords());
+    CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption encryption;
 
+    Encryptor::encryptFile<CryptoPP::AES>(
+            pathToFile.c_str(),
+            serialized,
+            encryption,
+            password);
 }
 
-void MainService::loadFile(std::string pathToFile, std::string password) {
+void RecordSupplier::loadFile(std::string pathToFile, std::string password) {
+    CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption decryption;
+    std::string serialized = Encryptor::decryptFile<CryptoPP::AES>(
+            pathToFile.c_str(),
+            decryption,
+            password);
+    auto* loadedRecords = serializer->deserialize(serialized);
+    removeAllRecords();
+    for(auto* record: *loadedRecords){
+        addRecord(record);
+    }
 }
 
-MainService::MainService() {
+RecordSupplier::RecordSupplier() {
     idToRecordTypeInfo = new std::map<std::string, RecordTypeInfo*>;
     searchMetaToRecordTypeInfo = new std::multimap<std::string, RecordTypeInfo*>;
 
@@ -182,7 +200,7 @@ MainService::MainService() {
     record->manipulate("name:name1");
     record->manipulate("folder:name1");
     record->manipulate("password:password1");
-    records->push_front(record);
+    records->push_back(record);
 
 
     record = (Record*) new PasswordRecord();
@@ -190,7 +208,7 @@ MainService::MainService() {
     record->manipulate("name:name2");
     record->manipulate("folder:name2");
     record->manipulate("password:2");
-    records->push_front(record);
+    records->push_back(record);
 
     /////////////////////////////////////////////////////////////////////////////
     //todo: remove testing code
@@ -198,18 +216,27 @@ MainService::MainService() {
     //todo: insert loading records from backup file
     for (auto * record : *records){
         addRecord(record);
+        addTypeInfo(record->getTypeInfo());
     }
+
+    auto* typeIdentifierToRecordConstructor = new std::unordered_map<std::string, Record::RecordConstructor>();
+    for (auto pair: *idToRecordTypeInfo){
+        typeIdentifierToRecordConstructor->insert(std::make_pair(pair.first, pair.second->getConstructor()));
+    }
+
+    serializer = new Serializer(typeIdentifierToRecordConstructor);
 
 }
 
-void MainService::addRecord(Record *record) {
+void RecordSupplier::addRecord(Record *record) {
+    record->setId(std::to_string(++lastId));
     idToRecord->insert(std::make_pair(record->getId(), record));
     searchMetaToRecord->insert(std::make_pair(record->getSearchMeta(), record));
 
     folderToRecord->insert(std::make_pair(record->getFolder(), record));
 }
 
-void MainService::updateSearchMetaToRecord() {
+void RecordSupplier::updateSearchMetaToRecord() {
     //todo: find replacement for std::make_pair for iterator
     std::multimap<std::string, Record*> toUpdate;
     for (auto it : *searchMetaToRecord) {
@@ -224,7 +251,7 @@ void MainService::updateSearchMetaToRecord() {
 }
 
 
-void MainService::updateFolderToRecord() {
+void RecordSupplier::updateFolderToRecord() {
     //todo: find replacement for std::make_pair for iterator
     std::multimap<std::string, Record*> toUpdate;
     for (auto it : *folderToRecord) {
@@ -238,15 +265,15 @@ void MainService::updateFolderToRecord() {
     }
 }
 
-void MainService::addTypeInfo(RecordTypeInfo * typeInfo) {
-    if (idToRecordTypeInfo->find(typeInfo->getIdentifier()) != idToRecordTypeInfo->end()){
+void RecordSupplier::addTypeInfo(RecordTypeInfo * typeInfo) {
+    if (idToRecordTypeInfo->find(typeInfo->getIdentifier()) == idToRecordTypeInfo->end()){
         idToRecordTypeInfo->insert(std::make_pair(typeInfo->getIdentifier(), typeInfo));
         searchMetaToRecordTypeInfo->insert(std::make_pair(typeInfo->getSearchMeta(), typeInfo));
     }
 }
 
 template<typename K, typename V>
-std::deque<K> *MainService::getKeysFromMultiMap(std::multimap<K, V> *mmap) {
+std::deque<K> *RecordSupplier::getKeysFromMultiMap(std::multimap<K, V> *mmap) {
     auto* keys = new std::deque<K>();
 
     for(auto it = mmap->begin(), end = mmap->end();
@@ -258,7 +285,7 @@ std::deque<K> *MainService::getKeysFromMultiMap(std::multimap<K, V> *mmap) {
 }
 
 template<typename K, typename V>
-std::deque<V> *MainService::getValuesFromMultiMap(std::multimap<K, V> *mmap) {
+std::deque<V> *RecordSupplier::getValuesFromMultiMap(std::multimap<K, V> *mmap) {
     auto* values = new std::deque<V>();
 
     for(auto it = mmap->begin(), end = mmap->end();
@@ -270,7 +297,7 @@ std::deque<V> *MainService::getValuesFromMultiMap(std::multimap<K, V> *mmap) {
 }
 
 template<typename K, typename V>
-std::deque<K> *MainService::getKeysFromMap(std::map<K, V> *map) {
+std::deque<K> *RecordSupplier::getKeysFromMap(std::map<K, V> *map) {
     auto* keys = new std::deque<K>();
 
     for(auto it = map->begin(), end = map->end();
@@ -282,7 +309,7 @@ std::deque<K> *MainService::getKeysFromMap(std::map<K, V> *map) {
 }
 
 template<typename K, typename V>
-std::deque<V> *MainService::getValuesFromMap(std::map<K, V> *map) {
+std::deque<V> *RecordSupplier::getValuesFromMap(std::map<K, V> *map) {
     auto* values = new std::deque<V>();
 
     for(auto it = map->begin(), end = map->end();
@@ -291,4 +318,13 @@ std::deque<V> *MainService::getValuesFromMap(std::map<K, V> *map) {
         values->push_back(it->second);
     }
     return values;
+}
+
+void RecordSupplier::removeAllRecords() {
+    auto* ids = getKeysFromMap(idToRecord);
+    for (auto id : * ids){
+        removeRecordById(id);
+    }
+    delete(ids);
+    lastId = 0;
 }

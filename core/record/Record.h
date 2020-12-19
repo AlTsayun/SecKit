@@ -20,6 +20,7 @@ public:
 
     virtual std::string getSearchMeta() = 0;
     virtual std::string getId();
+    virtual std::string getName() = 0;
     virtual void setId(std::string idParam);
     virtual void manipulate(std::string input) = 0;
     virtual void initialize(std::string data) = 0;

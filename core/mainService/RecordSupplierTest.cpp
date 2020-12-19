@@ -3,7 +3,7 @@
 //
 
 #include <iostream>
-#include "MainService.h"
+#include "RecordSupplier.h"
 int main(){
     auto *mainService = MainService::getInstance();
     for (auto *record : *mainService->findRecordsBySearchQuery("name")){

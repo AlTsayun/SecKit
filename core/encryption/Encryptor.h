@@ -17,6 +17,7 @@
 
 class Encryptor {
 public:
+
 template <class T>
 static void encryptFile(
         const char* outFilePath,
@@ -25,7 +26,7 @@ static void encryptFile(
         typename CryptoPP::CBC_Mode<T>::Encryption encryption,
         const unsigned char *iv,
         size_t ivLength,
-        unsigned char *key,
+        const unsigned char *key,
         size_t keyLength)
 {
 
@@ -59,7 +60,7 @@ static unsigned char * decryptFile(
         long* dataLength,
         const char *inFilePath,
         typename CryptoPP::CBC_Mode<T>::Decryption decryption,
-        unsigned char *key,
+        const unsigned char *key,
         size_t keyLength)
 {
 
@@ -97,6 +98,69 @@ static unsigned char * decryptFile(
     return data;
 
 }
+static const CryptoPP::byte * ELFHash(std::string str, int hashSize) {
+        unsigned int hash = 0;
+        unsigned int x = 0;
+        unsigned int i = 0;
+        unsigned int len = str.length();
+
+        for (i = 0; i < len; i++)
+        {
+            hash = (hash << 4) + (str[i]);
+            if ((x = hash & 0xF0000000) != 0)
+            {
+                hash ^= (x >> 24);
+            }
+            hash &= ~x;
+        }
+
+        auto* array = static_cast<CryptoPP::byte *>(malloc(hashSize));
+        for (int i = 0; i < hashSize; i++)
+            array[i] = (hash >> ((i * 8) % 32));
+        return array;
+    }
+
+    template <class T>
+    static void encryptFile(
+            const char* outFilePath,
+            const std::string& data,
+            typename CryptoPP::CBC_Mode<T>::Encryption encryption,
+            std::string key)
+    {
+        const CryptoPP::byte iv[16] = {
+                8,7,6,5, 8,7,6,5, 8,7,6,5, 8,7,6,5
+        };
+
+        auto hash = ELFHash(key, CryptoPP::AES::DEFAULT_KEYLENGTH);
+        Encryptor::encryptFile<T>(
+                outFilePath,
+                reinterpret_cast<const CryptoPP::byte *> (data.c_str()),
+                data.size() + 1,
+                encryption,
+                iv,
+                16,
+                hash,
+                CryptoPP::AES::DEFAULT_KEYLENGTH);
+    }
+
+    template <class T>
+    static std::string decryptFile(
+            const char *inFilePath,
+            typename CryptoPP::CBC_Mode<T>::Decryption decryption,
+            std::string key)
+    {
+        long dataLength;
+
+        auto hash = ELFHash(key, CryptoPP::AES::DEFAULT_KEYLENGTH);
+        unsigned char *decryptedData = Encryptor::decryptFile<T>(
+                &dataLength,
+                inFilePath,
+                decryption,
+                hash,
+                CryptoPP::AES::DEFAULT_KEYLENGTH);
+        std::string serialized(reinterpret_cast<const char *const>(decryptedData), dataLength);
+        return serialized;
+    }
 };
 
 

@@ -17,6 +17,7 @@ find_package(libprotobuf REQUIRED)
 add_executable(SecKit
         core/encryption/Encryptor.cpp
         core/encryption/Encryptor.h
+        core/encryption/EncryptorTest.cpp
 
         core/record/PasswordRecord.cpp
         core/record/PasswordRecord.h
@@ -31,9 +32,9 @@ add_executable(SecKit
         core/serialization/generated/password.pb.cc
         core/serialization/generated/password.pb.h
 
-        core/mainService/MainService.cpp
-        core/mainService/MainService.h
-#        core/mainService/MainServiceTest.cpp
+        core/mainService/RecordSupplier.cpp
+        core/mainService/RecordSupplier.h
+#        core/recordSupplier/MainServiceTest.cpp
 
         winapi/MainWindowController.cpp
         winapi/MainWindowController.h

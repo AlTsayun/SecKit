@@ -26,6 +26,8 @@ public:
     std::string getFolder() override;
     std::string getInfo() override;
 
+    std::string getName() override;
+
     ~PasswordRecord() override;
 
     std::ostringstream *lastOperationInfo= new std::ostringstream();

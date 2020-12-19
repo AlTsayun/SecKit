@@ -2,22 +2,27 @@
 // Created by RedmiBook on 12.12.2020.
 //
 
-#ifndef SECKIT_MAINSERVICE_H
-#define SECKIT_MAINSERVICE_H
+#ifndef SECKIT_RECORDSUPPLIER_H
+#define SECKIT_RECORDSUPPLIER_H
 
 
 #include <deque>
 #include <string>
 #include <map>
 #include "../record/Record.h"
+#include "../serialization/Serializer.h"
+#include "../record/PasswordRecord.h"
+#include "../encryption/Encryptor.h"
 
-class MainService {
+class RecordSupplier {
 private:
+    Serializer* serializer;
     std::map<std::string, RecordTypeInfo*>* idToRecordTypeInfo;
     std::multimap<std::string, RecordTypeInfo*>* searchMetaToRecordTypeInfo;
     std::map<std::string, Record*>* idToRecord;
     std::multimap<std::string, Record*>* searchMetaToRecord;
     std::multimap<std::string, Record*>* folderToRecord;
+    int lastId = 0;
 
     template<typename K, typename V>
     static void removeSinglePairFromMultimap(std::multimap<K,V>* mmap, std::pair<K, V> mapPair);
@@ -55,19 +60,18 @@ private:
     void updateSearchMetaToRecord();
     void updateFolderToRecord();
 
-
-    static MainService *instance;
-    MainService();
+    static RecordSupplier *instance;
+    RecordSupplier();
 public:
-    MainService(MainService &other) = delete;
-    void operator=(const MainService &) = delete;
-    static MainService* getInstance();
+    RecordSupplier(RecordSupplier &other) = delete;
+    void operator=(const RecordSupplier &) = delete;
+    static RecordSupplier* getInstance();
 
     Record* getRecordById(std::string id);
     std::deque<Record *> * getAllRecords();
     void removeRecordById(std::string id);
     std::deque<Record*>* findRecordsBySearchQuery(std::string searchQuery);
-
+    void removeAllRecords();
 
     std::deque<std::string> *getAllFolders();
     std::deque<std::string>* findFoldersBySearchQuery(std::string searchQuery);
@@ -84,4 +88,4 @@ public:
 };
 
 
-#endif //SECKIT_MAINSERVICE_H
+#endif //SECKIT_RECORDSUPPLIER_H

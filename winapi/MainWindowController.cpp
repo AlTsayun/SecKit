@@ -10,9 +10,9 @@
 #include <iostream>
 #include "MainWindowController.h"
 
-MainWindowController::MainWindowController(MainService* mainService)
+MainWindowController::MainWindowController(RecordSupplier* mainService)
 {
-    this->mainService = mainService;
+    this->recordSupplier = mainService;
 }
 LRESULT CALLBACK MainWindowController::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -27,33 +27,17 @@ LRESULT CALLBACK MainWindowController::WindowProc(HWND hwnd, UINT uMsg, WPARAM w
     else
     {
         MainWindowController* _this = reinterpret_cast<MainWindowController*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-        if (uMsg == WM_SIZE)
-        {
-            _this->onWindowResized(HIWORD (lParam));
-        }
-//        else if (uMsg == WM_PAINT)
-//        {
-//            _this->onPaint(wParam, lParam);
-// //           _this->onFirstPaint();
-//        }
-        else if (uMsg == WM_CONTEXTMENU)
+
+        if (uMsg == WM_CONTEXTMENU)
         {
             _this->onContextMenu(wParam, lParam);
-//            HMENU hPopupMenu = CreatePopupMenu();
-//            InsertMenu(hPopupMenu, 0, MF_BYPOSITION | MF_STRING, ID_CLOSE, (LPCWSTR)"Exit");
-//            InsertMenu(hPopupMenu, 0, MF_BYPOSITION | MF_STRING, ID_EXIT, (LPCWSTR)"Play");
-//            SetForegroundWindow(hWnd);
-//            TrackPopupMenu(hPopupMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, 0, 0, 0, hWnd, NULL);
-        }
-        else if (uMsg == WM_VSCROLL)
-        {
-            _this->onScrolled(wParam, lParam);
         }
         else if (uMsg == WM_COMMAND)
         {
             _this->onCommand(wParam, lParam);
         }
         else if ((uMsg == WM_DESTROY) || (uMsg == WM_CLOSE)) {
+            _this->onDestroy(wParam, lParam);
             PostQuitMessage(0);
         }
         else {
@@ -87,8 +71,12 @@ BOOL MainWindowController::init(HINSTANCE hInstance)
 
     hMenu = CreateMenu();
     AppendMenu(hMenu, MF_STRING, IDM_RECORD_NEW, L"&New");
-    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenu, L"&Record");
+    AppendMenu(hMenu, MF_STRING, IDM_RECORDS_SHOW, L"&Show");
+    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenu, L"&Records");
 
+    hMenu = CreateMenu();
+    AppendMenu(hMenu, MF_STRING, IDM_ABOUT, L"&About");
+    AppendMenuW(hMenubar, MF_POPUP, (UINT_PTR)hMenu, L"&Help");
 
     // Create the window
     mainWindow_hwnd = CreateWindowEx(
@@ -104,21 +92,12 @@ BOOL MainWindowController::init(HINSTANCE hInstance)
         return FALSE;
     }
 
-//    if(hWindowIcon!=NULL)
-//        DestroyIcon(hWindowIcon);
-////    hWindowIcon =LoadIcon(GetModuleHandle(NULL), iconPath);
-//    SendMessage(mainWindow_hwnd, WM_SETICON, ICON_BIG, (LPARAM)hWindowIcon);
-//    SendMessage(mainWindow_hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hWindowIcon);
-
-
     listLabel_hwnd = CreateWindowEx(
             list_label_args,
             mainWindow_hwnd,
             (HMENU) ID_LIST_LABEL,
             hInstance,
             NULL);
-
-    SetWindowText(listLabel_hwnd, L"Records");
 
     hListContextMenu = CreatePopupMenu();
     AppendMenu(hListContextMenu, MF_BYCOMMAND | MF_STRING | MF_ENABLED, IDM_RECORD_DELETE, L"Delete selected");
@@ -129,11 +108,6 @@ BOOL MainWindowController::init(HINSTANCE hInstance)
             (HMENU) ID_LIST,
             hInstance,
             NULL);
-
-    SendMessage(list_hwnd, LB_ADDSTRING, 0, (LPARAM) L"first");
-    SendMessage(list_hwnd, LB_ADDSTRING, 0, (LPARAM) L"first");
-    SendMessage(list_hwnd, LB_ADDSTRING, 0, (LPARAM) L"first");
-    SendMessage(list_hwnd, LB_ADDSTRING, 0, (LPARAM) L"first");
 
 
     searchEdit_hwnd = CreateWindowEx(
@@ -157,6 +131,10 @@ BOOL MainWindowController::init(HINSTANCE hInstance)
             hInstance,
             NULL);
 
+    hMonospacedFont  = CreateFont(18, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+                                        CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Courier New"));
+    SendMessage(outputText_hwnd, WM_SETFONT, WPARAM(hMonospacedFont), TRUE);
+
     inputButton_hwnd = CreateWindowEx(
             input_button_args,
             mainWindow_hwnd,
@@ -171,6 +149,13 @@ BOOL MainWindowController::init(HINSTANCE hInstance)
             hInstance,
             NULL);
 
+
+    auto* records = recordSupplier->getAllRecords();
+    loadRecords(records);
+    delete(records);
+
+    onAbout(0,0);
+
     return TRUE;
 }
 BOOL MainWindowController::show(int nCmdShow)
@@ -184,36 +169,45 @@ BOOL MainWindowController::show(int nCmdShow)
     return ShowWindow(mainWindow_hwnd, nCmdShow);
 }
 
-void MainWindowController::onWindowResized(int clientAreaHeight)
-{
-
-}
-
-void MainWindowController::onPaint(WPARAM wParam, LPARAM lParam)
-{
-
-}
-void MainWindowController::onScrolled(WPARAM wParam, LPARAM lParam)
-{
-
-}
-
 void MainWindowController::onCommand(WPARAM wParam, LPARAM lParam) {
     if (LOWORD(wParam) == ID_LIST) {
         if (HIWORD(wParam) == LBN_SELCHANGE){
-            int selected = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
-            SendMessage(list_hwnd, LB_ADDSTRING, 0, (LPARAM) L"added");
-            if (selected > -1){
-                EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_ENABLED);
-            } else {
-                EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_GRAYED);
-            }
+            onListItemSelected(wParam, lParam);
         }
     }
     if (LOWORD(wParam) == IDM_RECORD_DELETE) {
-        int selected = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
-        selected +=0;
+        onRecordDelete(wParam, lParam);
+    }
+    if (LOWORD(wParam) == IDM_FILE_OPEN){
+        onOpenFile(wParam, lParam);
+    }
 
+    if(LOWORD(wParam) == IDM_FILE_SAVE){
+        onSaveFile(wParam, lParam);
+    }
+
+    if(LOWORD(wParam) == IDM_FILE_NEW){
+        onNewFile(wParam, lParam);
+    }
+
+    if(LOWORD(wParam) == ID_SEARCH_BUTTON){
+        onSearchButtonClick(wParam, lParam);
+    }
+
+    if(LOWORD(wParam) == ID_INPUT_BUTTON){
+        onInputButtonClick(wParam, lParam);
+    }
+
+    if(LOWORD(wParam) == IDM_RECORDS_SHOW){
+        onRecordsShow(wParam, lParam);
+    }
+
+    if(LOWORD(wParam) == IDM_RECORD_NEW){
+        onNewRecord(wParam, lParam);
+    }
+
+    if(LOWORD(wParam) == IDM_ABOUT){
+        onAbout(wParam, lParam);
     }
 
 }
@@ -225,5 +219,232 @@ void MainWindowController::onContextMenu(WPARAM wParam, LPARAM lParam) {
 }
 
 void MainWindowController::onListContextMenu(WPARAM wParam, LPARAM lParam) {
-    TrackPopupMenu(hListContextMenu, TPM_TOPALIGN | TPM_LEFTALIGN, LOWORD(lParam), HIWORD(lParam), 0, mainWindow_hwnd, NULL);
+    if (isRecords) {
+        TrackPopupMenu(hListContextMenu, TPM_TOPALIGN | TPM_LEFTALIGN, LOWORD(lParam), HIWORD(lParam), 0,
+                       mainWindow_hwnd, NULL);
+    }
 }
+
+void MainWindowController::loadRecords(std::deque<Record *> *records) {
+    isRecords = true;
+    isRecordTypes = false;
+    SendMessage(list_hwnd, LB_RESETCONTENT, 0, 0);
+    listPositionToItemId->clear();
+    int i = 0;
+    for(auto* record: *records){
+        SendMessage(list_hwnd, LB_ADDSTRING, 0, (LPARAM) stringToWString(record->getName()).c_str());
+        listPositionToItemId->insert(std::make_pair(i, record->getId()));
+        i++;
+    }
+    SetWindowText(listLabel_hwnd, L"Records");
+}
+
+std::wstring MainWindowController::stringToWString(const std::string& str) {
+    int len;
+    int strLen = (int)str.length() + 1;
+    len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), strLen, 0, 0);
+    wchar_t* buf = new wchar_t[len];
+    MultiByteToWideChar(CP_ACP, 0, str.c_str(), strLen, buf, len);
+    std::wstring r(buf);
+    delete[] buf;
+    return r;
+}
+
+void MainWindowController::loadRecordTypes(std::deque<RecordTypeInfo *> *typeInfos) {
+    isRecordTypes = true;
+    isRecords = false;
+    SendMessage(list_hwnd, LB_RESETCONTENT, 0, 0);
+    listPositionToItemId->clear();
+    int i = 0;
+    for(auto* typeInfo: *typeInfos){
+        SendMessage(list_hwnd, LB_ADDSTRING, 0, (LPARAM) stringToWString(typeInfo->getName()).c_str());
+        listPositionToItemId->insert(std::make_pair(i, typeInfo->getIdentifier()));
+        i++;
+    }
+    SetWindowText(listLabel_hwnd, L"Record types");
+}
+
+void MainWindowController::onListItemSelected(WPARAM wParam, LPARAM lParam) {
+    int position = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
+    if (isRecords){
+        if (position > -1){
+            EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_ENABLED);
+            onRecordSelected(wParam, lParam, position);
+        } else {
+            EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_GRAYED);
+        }
+    }
+    if (isRecordTypes){
+        if (position > -1) {
+            EnableMenuItem(hListContextMenu, IDM_RECORD_DELETE, MF_DISABLED);
+            onRecordTypeSelected(wParam, lParam, 0);
+        }
+    }
+}
+
+void MainWindowController::onRecordDelete(WPARAM wParam, LPARAM lParam) {
+    int position = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
+    if (listPositionToItemId->find(position) != listPositionToItemId->end()){
+        recordSupplier->removeRecordById(listPositionToItemId->at(position));
+        listPositionToItemId->erase(position);
+        auto *records = recordSupplier->getAllRecords();
+        loadRecords(records);
+        delete(records);
+    }
+    clearOutput();
+}
+
+void MainWindowController::onOpenFile(WPARAM wParam, LPARAM lParam) {
+    std::string password = enterPassword();
+
+    OPENFILENAME ofn;
+    TCHAR szFileName[MAX_PATH] = L"";
+
+    ZeroMemory(&ofn, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = mainWindow_hwnd;
+    ofn.lpstrFilter = L"Encrypted Files (*.enc)\0*.enc\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = L"enc";
+
+    if(GetOpenFileName(&ofn))
+    {
+        std::wstring tmp(&szFileName[0]);
+        std::string pathToFile(tmp.begin(), tmp.end());
+        recordSupplier->loadFile(pathToFile, password);
+    }
+    onRecordsShow(wParam, lParam);
+}
+
+void MainWindowController::onSaveFile(WPARAM wParam, LPARAM lParam) {
+
+    std::string password = enterPassword();
+
+    OPENFILENAME ofn;
+    TCHAR szFileName[MAX_PATH] = L"";
+
+    ZeroMemory(&ofn, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = mainWindow_hwnd;
+    ofn.lpstrFilter = L"Encrypted Files (*.enc)\0*.enc\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+    ofn.lpstrDefExt = L"enc";
+
+    if(GetSaveFileName(&ofn))
+    {
+        std::wstring tmp(&szFileName[0]);
+        std::string pathToFile(tmp.begin(), tmp.end());
+        recordSupplier->saveFile(pathToFile, password);
+    }
+}
+
+void MainWindowController::onNewFile(WPARAM wParam, LPARAM lParam) {
+
+}
+
+void MainWindowController::onSearchButtonClick(WPARAM wParam, LPARAM lParam) {
+
+    clearOutput();
+
+    GetWindowText(searchEdit_hwnd, editBuffer, sizeof(editBuffer));
+    std::wstring tmp(&editBuffer[0]);
+    std::string searchQuery(tmp.begin(), tmp.end());
+    if(isRecords)
+    {
+        auto *records = recordSupplier->findRecordsBySearchQuery(searchQuery);
+        loadRecords(records);
+        delete (records);
+    }
+    if (isRecordTypes){
+        auto *records = recordSupplier->findTypesBySearchQuery(searchQuery);
+        loadRecordTypes(records);
+        delete (records);
+    }
+}
+
+void MainWindowController::onInputButtonClick(WPARAM wParam, LPARAM lParam) {
+    if (isRecords){
+        int position = SendMessage(list_hwnd, LB_GETCURSEL, 0, 0);
+        if (listPositionToItemId->find(position) != listPositionToItemId->end()){
+            auto* record = recordSupplier->getRecordById(listPositionToItemId->at(position));
+            GetWindowText(inputEdit_hwnd, editBuffer, sizeof(editBuffer));
+            std::wstring tmp(&editBuffer[0]);
+            std::string manipulateQuery(tmp.begin(), tmp.end());
+            record->manipulate(manipulateQuery);
+            onRecordSelected(wParam, lParam, position);
+        }
+    }
+}
+
+void MainWindowController::onRecordsShow(WPARAM wParam, LPARAM lParam) {
+    auto* records = recordSupplier->getAllRecords();
+    loadRecords(records);
+    delete(records);
+}
+
+void MainWindowController::onNewRecord(WPARAM wParam, LPARAM lParam) {
+    auto* typeInfos = recordSupplier->getAllRecordTypeInfos();
+    loadRecordTypes(typeInfos);
+    delete(typeInfos);
+}
+
+void MainWindowController::onRecordSelected(WPARAM wParam, LPARAM lParam, int listPosition) {
+    auto* record = recordSupplier->getRecordById(listPositionToItemId->at(listPosition));
+    auto info = record->getInfo();
+    std::string::size_type pos = 0;
+    while ((pos = info.find('\n', pos)) != std::string::npos)
+    {
+        info.insert(pos, 1, '\r');
+        pos+=2;
+    }
+    SetWindowText(outputText_hwnd, stringToWString(info).c_str());
+}
+
+void MainWindowController::onRecordTypeSelected(WPARAM wParam, LPARAM lParam, int listPosition) {
+    auto* typeInfo = recordSupplier->getTypeInfoById(listPositionToItemId->at(listPosition));
+    auto info = typeInfo->getDescription();
+    info.append("\n");
+    info.append("\n");
+    info.append(CREATE_RECORD_TEXT);
+    std::string::size_type pos = 0;
+    while ((pos = info.find('\n', pos)) != std::string::npos)
+    {
+        info.insert(pos, 1, '\r');
+        pos+=2;
+    }
+    SetWindowText(outputText_hwnd, stringToWString(info).c_str());
+}
+
+void MainWindowController::onDestroy(WPARAM wParam, LPARAM lParam) {
+
+    DeleteObject(hMonospacedFont);
+
+}
+
+void MainWindowController::onAbout(WPARAM wParam, LPARAM lParam) {
+    std::string info(ABOUT_TEXT) ;
+    std::string::size_type pos = 0;
+    while ((pos = info.find('\n', pos)) != std::string::npos)
+    {
+        info.insert(pos, 1, '\r');
+        pos+=2;
+    }
+    SetWindowText(outputText_hwnd, stringToWString(info).c_str());
+    SendMessage(list_hwnd, LB_SETCURSEL, -1, 0);
+    onListItemSelected(wParam, lParam);
+}
+
+void MainWindowController::clearOutput() {
+    SetWindowText(outputText_hwnd, L"");
+}
+
+std::string MainWindowController::enterPassword() {
+    return "hello";
+}
+

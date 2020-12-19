@@ -11,9 +11,11 @@ const std::string Serializer::delimiter = ";";
 std::string Serializer::serialize(std::deque<Record*>* records){
     std::ostringstream oss;
     for(Record* record : *records){
-        oss << record->getTypeInfo()->getIdentifier()
+        auto typeIdentifier =  record->getTypeInfo()->getIdentifier();
+        auto serializationData = record->getSerializationData();
+        oss << typeIdentifier
             << delimiter
-            << record->getSerializationData()
+            << serializationData
             << delimiter;
     }
     return oss.str();
@@ -50,7 +52,7 @@ std::deque<Record*>* Serializer::deserialize(std::string input) {
             if(token.compare(key) == 0) {
                 auto *item = typeIdentifierToRecordConstructor->at(key)();
                 item->initialize(data);
-                items->push_front(item);
+                items->push_back(item);
                 isSerialized = true;
                 break;
             }

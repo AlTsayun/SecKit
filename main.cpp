@@ -1,6 +1,6 @@
 #include <windows.h>
 #include "winapi/MainWindowController.h"
-#include "core/mainService/MainService.h"
+#include "core/mainService/RecordSupplier.h"
 #include "framework.h"
 //#include<gdiplus.h>
 
@@ -13,7 +13,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow)
 {
 
-    auto* window = new MainWindowController(MainService::getInstance());
+    auto* window = new MainWindowController(RecordSupplier::getInstance());
     window->init(hInstance);
     window->show(nCmdShow);
 

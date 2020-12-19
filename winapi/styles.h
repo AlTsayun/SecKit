@@ -118,7 +118,7 @@
         #define output_text_y (right_panel_y + output_text_padding)
         #define output_text_width (right_panel_width - 2*output_text_padding)
         #define output_text_height (right_panel_height - input_panel_height - 2*output_text_padding)
-        #define output_text_title L"Hello"
+        #define output_text_title L"Hello\r\nhello"
 
 #define main_window_args                     \
         main_window_styles,                  \
@@ -174,7 +174,7 @@
         output_text_styles,                \
         output_text_classname,             \
         output_text_title,                 \
-        (WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | ES_LEFT | ES_READONLY),\
+        (WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | ES_LEFT | ES_READONLY | ES_MULTILINE),\
         output_text_x,                     \
         output_text_y,                     \
         output_text_width,                 \
